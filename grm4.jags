@@ -1,0 +1,42 @@
+model
+{
+
+  # likelihood
+  for (i in 1:n){
+    for (j in 1:m){
+      Y[i, j] ~ dcat(prob[i, j, 1:K[j]])
+    }
+    theta[i] ~ dnorm(0, 4)
+   
+   # CDF (line 10) 
+    for (j in 1:m){
+	for (k in 1: (K[j]-1)){
+           logit(P[i, j, k]) <- kappa[j, k] - alpha[j]*theta[i]
+      }
+      P[i, j, K[j]] <- 1
+    }
+    
+   # CRF (line 18)
+    for (j in 1:m){
+      prob[i, j, 1] <- P[i, j, 1] 
+      for (k in 2:K[j]){
+        prob[i, j, k] <- P[i, j, k] - P[i, j, k-1]
+      }
+    }
+  }   
+
+  # prior 
+  for (j in 1:m)
+  {
+    alpha[j] ~ dnorm(0,0.16)I(0,) #normal dist
+  }
+
+  for (j in 1:m){
+    for (k in 1:(K[j]-1)){
+     kappa.star[j,k]~dnorm(0,0.16) #normal dist dist
+    }
+    kappa[j, 1:(K[j]-1)]<-sort(kappa.star[j, 1:(K[j]-1)])
+  }
+
+
+}
